@@ -34,14 +34,12 @@ const config = {
 async function runStrategyCycle() {
   log(`🚀 Strategy cycle started at ${formatDate()}`);
 
-  // console.time("getLatestHourlyKline");
   let candles = await bybit.getLatestHourlyKline(401);
   candles.shift(); // הסרת הנר הפעיל
   log("📊 Get 400 latest hourly kline");
-  // console.timeEnd("getLatestHourlyKline");
 
   const resultStrategy = processCandles(candles, config);
-  log(resultStrategy.action ? `💥 new signal 💥\n ${resultStrategy} `: '😡 No Signal' )
+  if(resultStrategy.action) log(`💥 new signal 💥\n ${resultStrategy} `)
 
   saveCandlesToFile(candles, resultStrategy)
 
@@ -52,7 +50,7 @@ async function runStrategyCycle() {
   // resultStrategy.tp_short=1808.54321
   // resultStrategy.action=1
 
-  // 🔁 איתות קיים + טרייד פתוח → עדכון נתונים
+  // 🔁 יש איתות + טרייד פתוח → עדכון נתונים
   if (resultStrategy.action && openTrade) {
 
     log(`📈 Update trade with new signal
@@ -85,7 +83,8 @@ async function runStrategyCycle() {
 
   // 🔻 אין איתות אבל טרייד פתוח → יציאה
   if (!resultStrategy.action && openTrade) {
-    log("🛑 Closing open trade - no signal");
+    log("😡 No Signal");
+    log("🛑 Closing open trade");
 
     // בדיקת טרייד פתוח
     let openTrade = await bybit.getActivePosition();
