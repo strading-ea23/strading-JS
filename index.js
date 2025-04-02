@@ -110,7 +110,7 @@ async function runStrategyCycle() {
   }
 }
 runOnNextHour(runStrategyCycle);
-runStrategyCycle()
+// runStrategyCycle()
 const go = async () => {
   let a = await bybit.calculateQuantity(20, 100)
   log(a)
