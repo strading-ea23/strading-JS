@@ -36,7 +36,7 @@ async function getLatestPrice() {
 
         const ticker = response.result.list[0];
         const lastPrice = parseFloat(ticker.lastPrice);
-        console.log('getLatestPrice:', lastPrice);
+        console.log('Latest Price:', lastPrice);
         return lastPrice;
     } catch (error) {
         console.error('getLatestPrice-ERROR:', error);
@@ -52,7 +52,7 @@ async function getAssets() {
 
         let usdtBalance = wallet.result.list[0]?.coin[0]?.equity;
         usdtBalance = parseFloat(usdtBalance);
-        console.log('usdtBalance:', usdtBalance);
+        console.log('Assets USDT:', usdtBalance);
         return usdtBalance;
     } catch (error) {
         console.error('usdtBalance-ERROR:', error);
@@ -81,13 +81,12 @@ async function placeOrder({ side, orderType, price, qty, takeProfit, stopLoss, r
             qty,
             price,
             timeInForce: 'GTC',
-            
             tpslMode: 'Full',
             reduceOnly
             // orderLinkId
         }
-        if(takeProfit) configOrder.takeProfit = takeProfit
-        if(stopLoss) configOrder.stopLoss = stopLoss
+        if(takeProfit) configOrder.takeProfit = String(takeProfit)
+        if(stopLoss) configOrder.stopLoss = String(stopLoss)
         
         console.log('config:', configOrder);
         const orderResult = await client.submitOrder(configOrder);
@@ -250,4 +249,4 @@ async function executeTrade() {
 
 
 export default { executeTrade, getLatestHourlyKline,setLeverage, getAssets,
-    getActivePosition, updatePosition,calculateQuantity,placeOrder}
+    getActivePosition, updatePosition,calculateQuantity,placeOrder,getLatestPrice}

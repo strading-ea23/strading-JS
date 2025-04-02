@@ -62,7 +62,7 @@ export const saveCandlesToFile = (candles, strategyResult = null) => {
 
     fs.writeFileSync(
         path.join(__dirname, 'candles', fileName),
-        JSON.stringify(dataToSave, null, 2)
+        JSON.stringify(strategyResult != null ?  dataToSave:candles, null, 2)
     );
 
     console.log(`📄 Candles + strategy result saved to ${fileName}`);

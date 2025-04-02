@@ -23,7 +23,7 @@ function calculateADX(candles, adxLength) {
 }
 
 
-function calculateRSI(candles, rsiLength) {
+function calculateRSI2(candles, rsiLength) {
     const gains = Array(candles.length).fill(0);
     const losses = Array(candles.length).fill(0);
 
@@ -46,6 +46,8 @@ function calculateRSI(candles, rsiLength) {
             const rs = avgLosses[i] === 0 ? Infinity : avgGains[i] / avgLosses[i];
             candles[i].rsi = 100 - (100 / (1 + rs));
         }
+        console.log(candles[i].rsi);
+        
     }
 
     // prev_rsi
@@ -57,8 +59,40 @@ function calculateRSI(candles, rsiLength) {
     return candles;
 }
 
+function calculateRSI(candles, rsiLength) {
+    const gains = Array(candles.length).fill(0);
+    const losses = Array(candles.length).fill(0);
+    const rsis = [];
 
-function rma(values, length) {
+    for (let i = 1; i < candles.length; i++) {
+        const change = candles[i].close - candles[i - 1].close;
+        if (change > 0) {
+            gains[i] = change;
+        } else {
+            losses[i] = -change;
+        }
+    }
+
+    for (let i = 0; i < candles.length; i++) {
+        if (i < rsiLength) {
+            candles[i].rsi = 1000;
+        } else {
+            const gainSum = gains.slice(i - rsiLength + 1, i + 1).reduce((a, b) => a + b, 0);
+            const lossSum = losses.slice(i - rsiLength + 1, i + 1).reduce((a, b) => a + b, 0);
+            const avgGain = gainSum / rsiLength;
+            const avgLoss = lossSum / rsiLength;
+
+            const rs = avgLoss === 0 ? Infinity : avgGain / avgLoss;
+            candles[i].rsi = 100 - (100 / (1 + rs));
+        }
+        // console.log(candles[i].rsi);
+        
+    }
+
+    return candles;
+}
+
+function rma2(values, length) {
     const alpha = 1 / length;
     const rmaArr = [];
     let avg = values[0];
@@ -70,6 +104,22 @@ function rma(values, length) {
     return rmaArr;
 }
 
+function rma(values, length) {
+    const alpha = 1 / length;
+    const rmaArr = [];
+    let avg = null;
+
+    for (let i = 0; i < values.length; i++) {
+        if (avg === null) {
+            avg = values[i]; // כמו בפייתון: הערך הראשון נכנס כמו שהוא
+        } else {
+            avg = (1 - alpha) * avg + alpha * values[i];
+        }
+        rmaArr.push(avg);
+    }
+
+    return rmaArr;
+}
 
 function calculateDirectionalMovement(candles, diLength) {
     const trList = [];
@@ -185,7 +235,7 @@ function processCandles(candles, config) {
         result.trade_type = last.trade_type
         result.entry_price_short = last.entry_price_short
         result.sl_short = last.sl_short
-        result.tp_short = last.tp_shor
+        result.tp_short = last.tp_short
 
     }
 
@@ -194,20 +244,3 @@ function processCandles(candles, config) {
 
 
 export default processCandles
-
-
-
-// const config = {
-//     diLength: 13,
-//     adxLength: 10,
-//     rsiLength: 31,
-//     threshA: 65,
-//     threshB: 38,
-//     desiredA: 0.0016,
-//     desiredB: 0.0015,
-//     rA: 10,
-//     rB: 16,
-//     destinationFactor: 0.5
-// }
-
-// const result = processCandles(candlesFromAPI, config);

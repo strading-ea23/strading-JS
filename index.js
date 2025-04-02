@@ -31,7 +31,7 @@ const config = {
   rA: 10,
   rB: 16,
   destinationFactor: 0.5,
-  leverage: 20
+  leverage: 19
 };
 
 async function runStrategyCycle() {
@@ -40,11 +40,21 @@ async function runStrategyCycle() {
   let candles = await bybit.getLatestHourlyKline(401);
   candles.shift(); // הסרת הנר הפעיל
   log("📊 Get 400 latest hourly kline");
-
+  
   const resultStrategy = processCandles(candles, config);
-  if (resultStrategy.action) logT('💥 new signal 💥', resultStrategy)
+
+  // const resultStrategy = {
+  //   "action": true,
+  //   "trade_type": "short",
+  //   "entry_price_short": 1825.65,
+  //   "sl_short": 1855.0282375000002,
+  //   "tp_short": 1815.5982000000001
+  // }
 
   saveCandlesToFile(candles, resultStrategy)
+  
+  if (resultStrategy.action) logT('💥 <b><u>New Signal</u></b> 💥', resultStrategy)
+
 
   // בדיקת טרייד פתוח
   let openTrade = await bybit.getActivePosition();
@@ -56,30 +66,32 @@ async function runStrategyCycle() {
   // 🔁 יש איתות + טרייד פתוח → עדכון נתונים
   if (resultStrategy.action && openTrade) {
 
-    logT(`📈 Update trade with new signal
+    logT(`📈 <b>Update trade with new signal</b>
          Take Profit: ${resultStrategy.tp_short} | StopLoss:${resultStrategy.sl_short} `);
 
     let resUpdatePos = await bybit.updatePosition({ takeProfit: resultStrategy.tp_short.toFixed(2), stopLoss: resultStrategy.sl_short.toFixed(2) });
-    logT("Updated trade: ", resUpdatePos)
+    logT(`Updated Order : ${titleRes(resUpdatePos)}`)
   }
 
 
 
   // 🟢 יש איתות ואין טרייד פתוח → כניסה
   if (resultStrategy.action && !openTrade) {
-    logT("🟢 Entering new trade");
+    logT("💹 <b>Entering new trade</b>");
     const qty = await bybit.calculateQuantity(config.leverage);
+
     const orderConfig = {
       side: Side.Sell,
       orderType: OrderType.Limit,
       price: String(resultStrategy.entry_price_short),
-      qty, profit: resultStrategy.tp_short,
-      stoploss: resultStrategy.sl_short,
+      qty,
+      takeProfit: resultStrategy.tp_short,
+      stopLoss: resultStrategy.sl_short,
       // reduceOnly:true
     }
     await bybit.setLeverage();
     const order = await bybit.placeOrder(orderConfig);
-    logT("💹 Order", order)
+    logT(`Place Order : ${titleRes(order)}`)
   }
 
 
@@ -87,7 +99,7 @@ async function runStrategyCycle() {
   // 🔻 אין איתות אבל טרייד פתוח → יציאה
   if (!resultStrategy.action && openTrade) {
     logT("😡 No Signal");
-    logT("🛑 Closing open trade");
+    logT("🛑 <b>Closing open trade</b>");
 
     // בדיקת טרייד פתוח
     let openTrade = await bybit.getActivePosition();
@@ -99,7 +111,7 @@ async function runStrategyCycle() {
         reduceOnly: true
       }
       const closeTrade = await bybit.placeOrder(orderConfig);
-      logT('closeTrade: ', closeTrade)
+      logT(`Close Order : ${titleRes(closeTrade)}`)
       openTrade = await bybit.getActivePosition();
     }
   }
@@ -117,7 +129,7 @@ runStrategyCycle()
 
 
 const go = async () => {
-  let a = await bybit.calculateQuantity(20, 100)
-  log(a)
 }
 // go()
+
+const titleRes = (res)=>`${res.retCode == 0 ? '🟢' : '🔴\nError: ' + res.retMsg}`

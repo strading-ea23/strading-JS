@@ -3,13 +3,7 @@ import TelegramBot from 'node-telegram-bot-api';
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN)//;, {polling: true});
 const chatId = process.env.TELEGRAM_CHAT_ID
 
-async function sendMessage(...args) {
-    let message = "";
-
-    for (const part of args) {
-        message += await objectToText(part);
-    }
-
+async function sendMessage(message) {
     bot.sendMessage(chatId, message, { parse_mode: "HTML" });
 }
 
@@ -30,9 +24,15 @@ async function objectToText(obj) {
     return text;
 }
 
-async function logT(data) {
-    sendMessage(data)
-    log(data)
+async function logT(...args) {
+    let message = "";
+
+    for (const part of args) {
+        message += await objectToText(part) +'\n';
+    }
+    
+    sendMessage(message)
+    log(message)
 }
 
 export default { sendMessage, logT }
