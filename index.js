@@ -1,9 +1,12 @@
 import 'dotenv/config';
 
 import bybit from './bybit.js'
+import telegram from './telegram.js'
+const { logT } = telegram
 import { log } from 'console';
 import processCandles from './strategy_js.js'
-import { Side, OrderType, saveCandlesToFile,formatDate } from './utility.js';
+import { Side, OrderType, saveCandlesToFile, formatDate } from './utility.js';
+
 
 function runOnNextHour(callback) {
   const now = new Date();
@@ -32,14 +35,14 @@ const config = {
 };
 
 async function runStrategyCycle() {
-  log(`🚀 Strategy cycle started at ${formatDate()}`);
+  logT(`🚀 Strategy cycle started at ${formatDate()}`);
 
   let candles = await bybit.getLatestHourlyKline(401);
   candles.shift(); // הסרת הנר הפעיל
   log("📊 Get 400 latest hourly kline");
 
   const resultStrategy = processCandles(candles, config);
-  if(resultStrategy.action) log(`💥 new signal 💥\n ${resultStrategy} `)
+  if (resultStrategy.action) logT('💥 new signal 💥', resultStrategy)
 
   saveCandlesToFile(candles, resultStrategy)
 
@@ -53,18 +56,18 @@ async function runStrategyCycle() {
   // 🔁 יש איתות + טרייד פתוח → עדכון נתונים
   if (resultStrategy.action && openTrade) {
 
-    log(`📈 Update trade with new signal
+    logT(`📈 Update trade with new signal
          Take Profit: ${resultStrategy.tp_short} | StopLoss:${resultStrategy.sl_short} `);
 
     let resUpdatePos = await bybit.updatePosition({ takeProfit: resultStrategy.tp_short.toFixed(2), stopLoss: resultStrategy.sl_short.toFixed(2) });
-    log("Update trade: ", resUpdatePos)
+    logT("Updated trade: ", resUpdatePos)
   }
 
 
 
   // 🟢 יש איתות ואין טרייד פתוח → כניסה
   if (resultStrategy.action && !openTrade) {
-    log("🟢 Entering new trade");
+    logT("🟢 Entering new trade");
     const qty = await bybit.calculateQuantity(config.leverage);
     const orderConfig = {
       side: Side.Sell,
@@ -76,15 +79,15 @@ async function runStrategyCycle() {
     }
     await bybit.setLeverage();
     const order = await bybit.placeOrder(orderConfig);
-    log("Order : ", order)
+    logT("💹 Order", order)
   }
 
 
 
   // 🔻 אין איתות אבל טרייד פתוח → יציאה
   if (!resultStrategy.action && openTrade) {
-    log("😡 No Signal");
-    log("🛑 Closing open trade");
+    logT("😡 No Signal");
+    logT("🛑 Closing open trade");
 
     // בדיקת טרייד פתוח
     let openTrade = await bybit.getActivePosition();
@@ -96,7 +99,7 @@ async function runStrategyCycle() {
         reduceOnly: true
       }
       const closeTrade = await bybit.placeOrder(orderConfig);
-      log('closeTrade: ',closeTrade)
+      logT('closeTrade: ', closeTrade)
       openTrade = await bybit.getActivePosition();
     }
   }
@@ -105,11 +108,14 @@ async function runStrategyCycle() {
 
   // 😴 אין איתות ואין טרייד פתוח → דילוג
   if (!resultStrategy.action && !openTrade) {
-    log("😴 No signal and no trade. Waiting...");
+    logT("😴 No signal and no trade. Waiting...");
   }
 }
 runOnNextHour(runStrategyCycle);
-// runStrategyCycle()
+runStrategyCycle()
+
+
+
 const go = async () => {
   let a = await bybit.calculateQuantity(20, 100)
   log(a)
