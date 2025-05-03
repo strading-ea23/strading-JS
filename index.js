@@ -10,13 +10,17 @@ import { Side, OrderType, saveCandlesToFile, formatDate } from './utility.js';
 
 function runOnNextHour(callback) {
   const now = new Date();
-  const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+  const msUntilNextHour = 
+    (60 - now.getMinutes()) * 60 * 1000 - 
+    now.getSeconds() * 1000 - 
+    now.getMilliseconds() + 
+    1000; // הוספת שנייה אחת
 
   log(`⌛ First run in ${(msUntilNextHour / 1000 / 60).toFixed(2)} minutes`);
 
   setTimeout(() => {
-    callback(); // run first time
-    setInterval(callback, 60 * 60 * 1000); // repeat every hour
+    callback(); // הפעלה ראשונה
+    setInterval(callback, 60 * 60 * 1000); // חזרה כל שעה בדיוק
   }, msUntilNextHour);
 }
 
@@ -129,6 +133,7 @@ runStrategyCycle()
 
 
 const go = async () => {
+  
 }
 // go()
 

@@ -1,22 +1,25 @@
 function calculateADX(candles, adxLength) {
-    const dxList = [];
-
-    for (let i = 0; i < candles.length; i++) {
-        const plus = candles[i].plus ?? 0;
-        const minus = candles[i].minus ?? 0;
-
-        const sum = plus + minus || 1; // הימנעות מחלוקה באפס
+    for (let i = 1; i < candles.length; i++) {
+        const plus = candles[i]?.plus ?? 0;
+        const minus = candles[i]?.minus ?? 0;
+        const sum = plus + minus;
+        const denominator = sum !== 0 ? sum : 1;
         const diff = Math.abs(plus - minus);
+        const dx = diff / denominator;
 
-        const dx = 100 * (diff / sum);
-        dxList.push(dx);
+        const adx = 100 * rma([dx], adxLength)[0]; // לחשב RMA על נקודה בודדת
+        candles[i].adx = adx;
+
+        if (i > 1) {
+            candles[i].prev_adx = candles[i-1].adx;
+        }
     }
 
-    const adxValues = rma(dxList, adxLength);
-
-    for (let i = 0; i < candles.length; i++) {
-        candles[i].adx = adxValues[i];
-        candles[i].prev_adx = i > 0 ? adxValues[i - 1] : adxValues[i];
+    // תיקון לשני הנרות הראשונים
+    if (candles.length > 1) {
+        candles[0].adx = candles[1].adx;
+        candles[1].prev_adx = candles[0].adx;
+        candles[0].prev_adx = candles[1].prev_adx;
     }
 
     return candles;

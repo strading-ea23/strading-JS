@@ -62,10 +62,63 @@ export const saveCandlesToFile = (candles, strategyResult = null) => {
 
     fs.writeFileSync(
         path.join(__dirname, 'candles', fileName),
-        JSON.stringify(strategyResult != null ?  dataToSave:candles, null, 2)
+        JSON.stringify(strategyResult != null ? dataToSave : candles, null, 2)
     );
 
     console.log(`📄 Candles + strategy result saved to ${fileName}`);
+}
+
+
+export const saveResultToFileTest = (strategyResult, currentTime ) => {
+    if (!strategyResult.action) return;
+
+    const timestamp = formatDateToFile(currentTime)
+   
+    const fileName = `${timestamp}_result.json`;
+
+    const dirPath = path.join(__dirname, 'candles_test4');
+
+    saveToFile(dirPath, fileName, strategyResult)
+
+    console.log(`📄 saved : ${fileName}`);
+}
+
+export const saveCandlesToFileTest = (candles, currentTime, isBefore = true) => {
+    if (!candles.length) return;
+
+    const timestamp = formatDateToFile(currentTime)
+   
+    const fileName = `${timestamp}_${isBefore ? 'before' : 'after'}.json`;
+
+    const dirPath = path.join(__dirname, 'candles_test3');
+
+    saveToFile(dirPath, fileName, candles)
+
+    console.log(`📄 saved : ${fileName}`);
+}
+
+const saveToFile = (dirPath, fileName, data)=>{
+
+    // אם התיקייה לא קיימת - צור אותה
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    fs.writeFileSync(
+        path.join(dirPath, fileName),
+        JSON.stringify(data, null, 2)
+    );
+}
+
+const formatDateToFile = (currentTime) => {
+
+    const now = new Date(currentTime);
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    return `${day}${month}_${hours}${minutes}`;
 }
 
 export const formatDate = (date = new Date()) => {
