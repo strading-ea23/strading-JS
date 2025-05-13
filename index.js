@@ -26,14 +26,14 @@ function runOnNextHour(callback) {
 
 const config = {
   diLength: 13,
-  rsiLength: 31,
+  rsiLength: 36,
   adxLength: 10,
-  threshA: 65,
+  threshA: 62,
   threshB: 38,
   desiredA: 0.0016,
   desiredB: 0.0015,
-  rA: 10,
-  rB: 16,
+  rA: 13,
+  rB: 15,
   destinationFactor: 0.5,
   leverage: 19
 };
